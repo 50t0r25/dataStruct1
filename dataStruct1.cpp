@@ -114,7 +114,7 @@ int main() {
     while (true) { // While loop for looping program and not closing when done
 
         clearScreen();
-        cout << "Choose action (0:Add line, 1:delete line, 2:read):" << endl;
+        cout << "Choose action (0:Add line, 1:delete data, 2:read):" << endl;
         cin >> choice;
         clearScreen();
 
@@ -174,6 +174,9 @@ int main() {
             const char * p = filename.c_str();
             remove(p);
             std::rename(".tmp.tedat", p);
+
+            clearScreen();
+            cout << "Successfully deleted data point number: " + to_string(deleteLine) + "\n" << endl;
 
         } else if (choice == 2) { // -------------- READING FILE -------------- //
             int i=0;
