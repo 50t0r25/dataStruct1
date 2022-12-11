@@ -1,0 +1,23 @@
+@startuml class_diagram
+
+abstract class Personne {
+    -id : Integer
+    -nom : String
+    -zoneGeo : Integer
+}
+
+class Recommande {
+    -id : Integer
+    -type : String
+    -idFacteur : Integer
+    -idDestinataire : Integer
+}
+
+class Facteur
+class Habitant
+
+Personne <|-- Facteur
+Personne <|-- Habitant
+Facteur "1" -- "0..*" Recommande : distribue
+
+@enduml
