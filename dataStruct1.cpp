@@ -65,24 +65,26 @@ int main() {
 
     clearScreen();
 
-    while (true) {
+    while (true) { // Loop to wait for correct database password
 
         cout << "Give database name:" << endl;
         readString(filename);
         clearScreen();
         filename = filename + ".edat";
 
-        if (fileExists(filename)) {
+        if (fileExists(filename)) { // File exists so ask for password
 
             cout << "Database already exists, give password:" << endl;
             readString(password);
             clearScreen();
 
+            // Get the first line, which is an encrypted hash of the password
             ifstream fileIn;
             fileIn.open(filename);
             getline(fileIn, line);
             line = xorCipher(line,password);
 
+            // Check if the password is correct
             if (hashString(password) == line) {
                 cout << "password correct" << endl;
                 break;
@@ -96,8 +98,9 @@ int main() {
             cout << "Creating new database...\nPassword required:" << endl;
             readString(password);
 
-            ofstream fileOut; //create new file
-
+            // Create new database file
+            // Then add an encrypted hash of the password in the first line of the file
+            ofstream fileOut;
             fileOut.open(filename, ios_base::app);
             fileOut << xorCipher(hashString(password),password) << endl;
 
@@ -108,7 +111,7 @@ int main() {
 
     }
 
-    while (true) {
+    while (true) { // While loop for looping program and not closing when done
 
         clearScreen();
         cout << "Choose action (0:Add line, 1:delete line, 2:read):" << endl;
@@ -122,14 +125,27 @@ int main() {
 
             cout << "What to add? (0:Facteur, 1:Habitant, 2:Recommande):" << endl;
             cin >> choice;
+
+            // User is retarded
+            if (choice != 0 && choice != 1 && choice != 2) {
+
+                clearScreen();
+                cout << "What?????????????????\n" << endl;
+                return 1;
+
+            }
+
             classType = choice;
 
+            // Format then encrypt the user input into data to put in file
             clearScreen();
             output = xorCipher(to_string(classType) + " " + makeNewData(choice),password);
 
-            ofstream fileOut; //create or open file
-
+            //open file
+            ofstream fileOut;
             fileOut.open(filename, ios_base::app);
+
+            // Put data to file 
             fileOut << output << endl;
 
             fileOut.close();
@@ -146,7 +162,7 @@ int main() {
             temp.open(".tmp.tedat");
 
             while (getline(fileIn, line)) {
-                // write all lines to temp other than the line marked for erasing
+                // Write all lines to temp except the line marked for removing
                 if (i != deleteLine || i == 0)
                     temp << line << std::endl;
                 i++;
@@ -165,18 +181,20 @@ int main() {
             ifstream fileIn;
             fileIn.open(filename);
 
+            // Loop through file line by line
             while (getline(fileIn, line)) {
                 if (i==0) {i++; continue;}
 
+                // Decrypt the current line
                 line = xorCipher(line,password);
 
                 vector<string> vector_input;
                 string toShow;
                 int classType;
 
+                // Split the line into different variables then format for output
                 vector_input = splitS(line, " ");
                 classType = stoi(vector_input[0]);
-
                 if (classType == 0) {
 
                     Facteur fac(stoi(vector_input[1]),vector_input[2],stoi(vector_input[3]));
@@ -197,8 +215,16 @@ int main() {
             }
 
             fileIn.close();
+
+        } else { // User is actually retarded
+
+            clearScreen();
+            cout << "Apparently you can't read\n" << endl;
+            return 1;
+
         }
         
+        // Ask if user wants to Quit
         char tmp='0';
         cout << "Quit? (Y/N)" << endl;
         while (tmp != 'n' && tmp != 'N' && tmp != 'y' && tmp != 'Y') {
@@ -267,6 +293,7 @@ void readString(string &input) {
 
 
 // Function to generate new line that will be added to file
+// Im too tired to explain how this works, so just trust me bro
 string makeNewData(int &choice) {
 
     string text_input;
