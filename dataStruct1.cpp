@@ -9,6 +9,11 @@
 #include <unordered_map>
 using namespace std;
 
+static const string base64_chars =
+             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+             "abcdefghijklmnopqrstuvwxyz"
+             "0123456789+/";
+
 // ------------ FUNCTION PROTOTYPES BEGIN ------------ //
 
 void clearScreen();
@@ -16,8 +21,15 @@ vector<string> splitS (const string &s, const string &delimiter);
 inline bool fileExists (const string &name);
 void readString (string &input);
 string makeNewData (int &choice);
-string xorCipher(const string &str, const string &password);
+string xorCipher(const bool &decrypt, string str, const string &password);
 string hashString (const string& str);
+static inline bool is_base64(unsigned char c);
+vector<unsigned char> stringToUnsignedChar(const string& str);
+string unsignedCharVectorToString(const vector<unsigned char>& vec);
+string base64Encode(unsigned char const* buf, unsigned int bufLen);
+vector<unsigned char> base64Decode(string const& encoded_string);
+string stringToBase64(const string &in);
+string base64ToString(const string &in);
 
 // ------------ ^FUNCTION PROTOTYPES END^ ------------- //
 
@@ -82,7 +94,7 @@ int main() {
             ifstream fileIn;
             fileIn.open(filename);
             getline(fileIn, line);
-            line = xorCipher(line,password);
+            line = xorCipher(true, line,password);
 
             // Check if the password is correct
             if (hashString(password) == line) {
@@ -102,7 +114,7 @@ int main() {
             // Then add an encrypted hash of the password in the first line of the file
             ofstream fileOut;
             fileOut.open(filename, ios_base::app);
-            fileOut << xorCipher(hashString(password),password) << endl;
+            fileOut << xorCipher(false, hashString(password),password) << endl;
 
             fileOut.close();
 
@@ -139,7 +151,7 @@ int main() {
 
             // Format then encrypt the user input into data to put in file
             clearScreen();
-            output = xorCipher(to_string(classType) + " " + makeNewData(choice),password);
+            output = xorCipher(false, to_string(classType) + " " + makeNewData(choice),password);
 
             //open file
             ofstream fileOut;
@@ -189,7 +201,7 @@ int main() {
                 if (i==0) {i++; continue;}
 
                 // Decrypt the current line
-                line = xorCipher(line,password);
+                line = xorCipher(true, line,password);
 
                 vector<string> vector_input;
                 string toShow;
@@ -342,14 +354,19 @@ string makeNewData(int &choice) {
     return 0;
 }
 
-// Encrypt/Decrypt string using XOR Cipher
-string xorCipher(const string &str, const string &password)
-{
+// Encrypt/Decrypt string using XOR Cipher while Encoding/Decoding from base64
+// when the decrypt bool is true, the funtion decrypts, otherwise it encrypts
+string xorCipher(const bool &decrypt, string str, const string &password) {
+
+    if (decrypt) str = base64ToString(str);
+
     string encryptedString;
     for (int i = 0; i < str.length(); i++)
     {
         encryptedString += (char)(str[i] ^ password[i % password.length()]);
     }
+    if (!decrypt) encryptedString = stringToBase64(encryptedString);
+    
     return encryptedString;
 }
 
@@ -362,4 +379,126 @@ string hashString(const string& str)
         hash = hash * 31 + c;
     }
     return to_string(hash);
+}
+
+// Checks if a character is in base64
+static inline bool is_base64(unsigned char c) {
+  return (isalnum(c) || (c == '+') || (c == '/'));
+}
+
+// Converts a string to a vector of unsigned chars
+vector<unsigned char> stringToUnsignedChar(const string& str)
+{
+    std::vector<unsigned char> result;
+    for (char c : str)
+    {
+        result.push_back(static_cast<unsigned char>(c));
+    }
+    return result;
+}
+
+// Converts an unsigned char vector to string
+string unsignedCharVectorToString(const vector<unsigned char>& vec)
+{
+    std::string str;
+    for (auto c : vec)
+    {
+        str += c;
+    }
+    return str;
+}
+
+// Encodes a buffer of characters to base64
+string base64Encode(unsigned char const* buf, unsigned int bufLen) {
+  string ret;
+  int i = 0;
+  int j = 0;
+  unsigned char char_array_3[3];
+  unsigned char char_array_4[4];
+
+  while (bufLen--) {
+    char_array_3[i++] = *(buf++);
+    if (i == 3) {
+      char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+      char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+      char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+      char_array_4[3] = char_array_3[2] & 0x3f;
+
+      for(i = 0; (i <4) ; i++)
+        ret += base64_chars[char_array_4[i]];
+      i = 0;
+    }
+  }
+
+  if (i)
+  {
+    for(j = i; j < 3; j++)
+      char_array_3[j] = '\0';
+
+    char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+    char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+    char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+    char_array_4[3] = char_array_3[2] & 0x3f;
+
+    for (j = 0; (j < i + 1); j++)
+      ret += base64_chars[char_array_4[j]];
+
+    while((i++ < 3))
+      ret += '=';
+  }
+
+  return ret;
+}
+
+// Decodes a base64 string to a vector of unsigned chars
+vector<unsigned char> base64Decode(string const& encoded_string) {
+  int in_len = encoded_string.size();
+  int i = 0;
+  int j = 0;
+  int in_ = 0;
+  unsigned char char_array_4[4], char_array_3[3];
+  std::vector<unsigned char> ret;
+
+  while (in_len-- && ( encoded_string[in_] != '=') && is_base64(encoded_string[in_])) {
+    char_array_4[i++] = encoded_string[in_]; in_++;
+    if (i ==4) {
+      for (i = 0; i <4; i++)
+        char_array_4[i] = base64_chars.find(char_array_4[i]);
+
+      char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+      char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+      char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
+
+      for (i = 0; (i < 3); i++)
+          ret.push_back(char_array_3[i]);
+      i = 0;
+    }
+  }
+
+  if (i) {
+    for (j = i; j <4; j++)
+      char_array_4[j] = 0;
+
+    for (j = 0; j <4; j++)
+      char_array_4[j] = base64_chars.find(char_array_4[j]);
+
+    char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+    char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+    char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
+
+    for (j = 0; (j < i - 1); j++) ret.push_back(char_array_3[j]);
+  }
+
+  return ret;
+}
+
+// Simplified function to encode string to base64
+string stringToBase64(const string &in) {
+    vector<unsigned char> temp = stringToUnsignedChar(in);
+    return base64Encode(&temp[0], temp.size());
+}
+
+// Simplified function to decode string from base64
+string base64ToString(const string &in) {
+    return unsignedCharVectorToString(base64Decode(in));
 }
