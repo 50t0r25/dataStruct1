@@ -177,7 +177,7 @@ int main() {
             while (getline(fileIn, line)) {
                 // Write all lines to temp except the line marked for removing
                 if (i != deleteLine || i == 0) {
-                    temp << line << std::endl;
+                    temp << line << endl;
                 } else successfullyDeleted = true;
                     
                 i++;
@@ -188,7 +188,7 @@ int main() {
             // Replace original file with the temp one
             const char * p = filename.c_str();
             remove(p);
-            std::rename(".tmp.tedat", p);
+            rename(".tmp.tedat", p);
 
             clearScreen();
             if (successfullyDeleted) {
@@ -297,7 +297,7 @@ void clearScreen() {
         //clrscr(); // including header file : conio.h
     #elif defined (__LINUX__) || defined(__gnu_linux__) || defined(__linux__)
         system("clear");
-        //std::cout<< u8"\033[2J\033[1;1H"; //Using ANSI Escape Sequences 
+        //cout<< u8"\033[2J\033[1;1H"; //Using ANSI Escape Sequences 
     #elif defined (__APPLE__)
         system("clear");
     #endif
@@ -395,7 +395,7 @@ static inline bool is_base64(unsigned char c) {
 // Converts a string to a vector of unsigned chars
 vector<unsigned char> stringToUnsignedChar(const string& str)
 {
-    std::vector<unsigned char> result;
+    vector<unsigned char> result;
     for (char c : str)
     {
         result.push_back(static_cast<unsigned char>(c));
@@ -406,7 +406,7 @@ vector<unsigned char> stringToUnsignedChar(const string& str)
 // Converts an unsigned char vector to string
 string unsignedCharVectorToString(const vector<unsigned char>& vec)
 {
-    std::string str;
+    string str;
     for (auto c : vec)
     {
         str += c;
@@ -463,7 +463,7 @@ vector<unsigned char> base64Decode(string const& encoded_string) {
   int j = 0;
   int in_ = 0;
   unsigned char char_array_4[4], char_array_3[3];
-  std::vector<unsigned char> ret;
+  vector<unsigned char> ret;
 
   while (in_len-- && ( encoded_string[in_] != '=') && is_base64(encoded_string[in_])) {
     char_array_4[i++] = encoded_string[in_]; in_++;
