@@ -164,6 +164,7 @@ int main() {
 
         } else if (choice == 1) { // ------------ REMOVING GIVEN LINE ------------ //
             int i=0;
+            bool successfullyDeleted = false;
 
             cout << "Give line number to delete:" << endl;
             cin >> deleteLine;
@@ -175,8 +176,10 @@ int main() {
 
             while (getline(fileIn, line)) {
                 // Write all lines to temp except the line marked for removing
-                if (i != deleteLine || i == 0)
+                if (i != deleteLine || i == 0) {
                     temp << line << std::endl;
+                } else successfullyDeleted = true;
+                    
                 i++;
             }
             temp.close();
@@ -188,7 +191,10 @@ int main() {
             std::rename(".tmp.tedat", p);
 
             clearScreen();
-            cout << "Successfully deleted data point number: " + to_string(deleteLine) + "\n" << endl;
+            if (successfullyDeleted) {
+                cout << "Successfully deleted data point number: " + to_string(deleteLine) + "\n" << endl;
+            } else cout << "Error: Line doesn't exist" << endl;
+            
 
         } else if (choice == 2) { // -------------- READING FILE -------------- //
             int i=0;
